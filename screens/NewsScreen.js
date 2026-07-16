@@ -7,13 +7,14 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
+import { useNavigation } from '@react-navigation/native';
 import NewsCard from '../components/NewsCard';
 import SkeletonCard from '../components/SkeletonCard';
 import { loadNewsFast, loadNewsDetails } from '../services/newsService';
 import { globalStyles, colors, spacing } from '../styles/styles';
 
 export default function NewsScreen() {
+  const navigation = useNavigation();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,18 +27,15 @@ export default function NewsScreen() {
       setLoading(true);
       setIsDetailsLoading(false);
 
-      // 1. БЫСТРАЯ ЗАГРУЗКА (только заголовки)
       const fastData = await loadNewsFast();
       setNews(fastData);
       setLoading(false);
       setIsDetailsLoading(true);
 
-      // 2. ФОНОВАЯ ДОЗАГРУЗКА (детали для каждой новости)
       const detailedNews = [];
       for (let i = 0; i < fastData.length; i++) {
         const detailed = await loadNewsDetails(fastData[i]);
         detailedNews.push(detailed);
-        // Обновляем список постепенно
         setNews([...detailedNews]);
       }
       setIsDetailsLoading(false);
@@ -57,16 +55,13 @@ export default function NewsScreen() {
     load();
   }, []);
 
-  const openNews = async (url) => {
-    try {
-      await WebBrowser.openBrowserAsync(url);
-    } catch (err) {
-      console.error('Ошибка открытия:', err);
-      Alert.alert('Ошибка', 'Не удалось открыть новость');
-    }
+  const openNews = (url, title) => {
+    navigation.navigate('WebView', {
+      url: url,
+      title: title || 'Новость',
+    });
   };
 
-  // Показываем скелетоны во время загрузки
   if (loading) {
     return (
       <View style={globalStyles.center}>
@@ -128,11 +123,15 @@ export default function NewsScreen() {
         </View>
       }
       renderItem={({ item }) => {
-        // Если новость ещё загружается — показываем скелетон
         if (item.isLoading) {
           return <SkeletonCard />;
         }
-        return <NewsCard item={item} onPress={() => openNews(item.url)} />;
+        return (
+          <NewsCard
+            item={item}
+            onPress={() => openNews(item.url, item.title)}
+          />
+        );
       }}
     />
   );

@@ -1,94 +1,84 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import NewsScreen from './screens/NewsScreen';
 import ContactsScreen from './screens/ContactsScreen';
 import AboutScreen from './screens/AboutScreen';
+import WebViewScreen from './screens/WebViewScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Новости') {
+            iconName = focused ? 'newspaper' : 'newspaper-outline';
+          } else if (route.name === 'Контакты') {
+            iconName = focused ? 'call' : 'call-outline';
+          } else if (route.name === 'О нас') {
+            iconName = focused ? 'information-circle' : 'information-circle-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#999',
+        headerStyle: {
+          backgroundColor: '#007AFF',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginTop: 2,
+        },
+      })}
+    >
+      <Tab.Screen name="Новости" component={NewsScreen} options={{ title: 'Новости' }} />
+      <Tab.Screen name="Контакты" component={ContactsScreen} options={{ title: 'Контакты' }} />
+      <Tab.Screen name="О нас" component={AboutScreen} options={{ title: 'О приложении' }} />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          // ИКОНКИ
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-
-            if (route.name === 'Новости') {
-              iconName = focused ? 'newspaper' : 'newspaper-outline';
-            } else if (route.name === 'Контакты') {
-              iconName = focused ? 'call' : 'call-outline';
-            } else if (route.name === 'О нас') {
-              iconName = focused ? 'information-circle' : 'information-circle-outline';
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          
-          // ЦВЕТА
-          tabBarActiveTintColor: '#007AFF',
-          tabBarInactiveTintColor: '#999',
-          
-          // ЗАГОЛОВОК
-          headerStyle: {
-            backgroundColor: '#007AFF',
-            elevation: 0,
-            shadowOpacity: 0,
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: '600',
-            fontSize: 18,
-          },
-          
-          // ============================================================
-          // ТАБ-БАР (ПОДНЯТЫЙ ВАРИАНТ)
-          // ============================================================
-          tabBarStyle: {
-            position: 'absolute',           // Делаем панель плавающей
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 0,              // Убираем верхнюю границу
-            elevation: 12,                  // Тень (Android)
-            shadowColor: '#000',            // Тень (iOS)
-            shadowOffset: { width: 0, height: -4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            height: 70,                     // Высота панели
-            paddingBottom: 12,
-            paddingTop: 6,
-            marginHorizontal: 16,           // Отступы по бокам
-            marginBottom: 12,               // Отступ снизу (поднимаем панель)
-            borderRadius: 20,               // Скругление углов
-          },
-          tabBarLabelStyle: {
-            fontSize: 11,
-            fontWeight: '500',
-            marginTop: 2,
-          },
-          
-          tabBarHideOnKeyboard: true,
-        })}
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}
       >
-        <Tab.Screen
-          name="Новости"
-          component={NewsScreen}
-          options={{ title: 'Новости' }}
+        <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen
+          name="WebView"
+          component={WebViewScreen}
+          options={{
+            headerShown: false,
+          }}
         />
-        <Tab.Screen
-          name="Контакты"
-          component={ContactsScreen}
-          options={{ title: 'Контакты' }}
-        />
-        <Tab.Screen
-          name="О нас"
-          component={AboutScreen}
-          options={{ title: 'О приложении' }}
-        />
-      </Tab.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
