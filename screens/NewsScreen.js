@@ -22,10 +22,10 @@ export default function NewsScreen() {
     try {
       setError('');
       setLoading(true);
-      
-      const data = await loadNews(); // убрали onProgress
+
+      const data = await loadNews();
       setNews(data);
-      
+
       if (data.length === 0) {
         setError('Новостей не найдено');
       }
@@ -52,7 +52,6 @@ export default function NewsScreen() {
     }
   };
 
-  // --- ЭКРАН ЗАГРУЗКИ (показывается только при первом открытии) ---
   if (loading) {
     return (
       <View style={globalStyles.center}>
@@ -64,7 +63,6 @@ export default function NewsScreen() {
     );
   }
 
-  // --- ОСНОВНОЙ СПИСОК ---
   return (
     <FlatList
       data={news}
@@ -83,10 +81,24 @@ export default function NewsScreen() {
       }
       ListHeaderComponent={
         error ? (
-          <View style={{ alignItems: 'center', padding: spacing.xl, marginBottom: spacing.lg, backgroundColor: '#FFF3E0', borderRadius: 12 }}>
+          <View style={{
+            alignItems: 'center',
+            padding: spacing.xl,
+            marginBottom: spacing.lg,
+            backgroundColor: '#FFF3E0',
+            borderRadius: 12,
+          }}>
             <Text style={{ fontSize: 40, marginBottom: spacing.sm }}>⚠️</Text>
             <Text style={{ color: colors.error, fontSize: 16, textAlign: 'center' }}>{error}</Text>
-            <Text style={{ color: colors.primary, fontSize: 15, marginTop: spacing.md, fontWeight: '500' }} onPress={load}>
+            <Text
+              style={{
+                color: colors.primary,
+                fontSize: 15,
+                marginTop: spacing.md,
+                fontWeight: '500',
+              }}
+              onPress={load}
+            >
               Нажмите, чтобы повторить
             </Text>
           </View>
