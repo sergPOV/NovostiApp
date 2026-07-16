@@ -35,7 +35,7 @@ export default function WebViewScreen({ route, navigation }) {
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       {/* Верхняя панель с минимальным отступом */}
-      <View style={[styles.header, { paddingTop: statusBarHeight + 4 }]}>
+      <View style={[styles.header, { paddingTop: statusBarHeight + 2 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.headerButton}

@@ -29,6 +29,8 @@ function MainTabs() {
         },
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#999',
+        
+        // ЗАГОЛОВОК
         headerStyle: {
           backgroundColor: '#007AFF',
         },
@@ -36,17 +38,25 @@ function MainTabs() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        
+        // ============================================================
+        // 🎨 СТИЛЬ ПАНЕЛИ — ПЛАВАЮЩАЯ (как раньше)
+        // ============================================================
         tabBarStyle: {
+          position: 'absolute',           // плавающая панель
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
-          elevation: 8,
+          elevation: 12,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 4,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          height: 70,
+          paddingBottom: 12,
+          paddingTop: 6,
+          marginHorizontal: 16,           // отступы по бокам
+          marginBottom: 12,               // поднята над низом
+          borderRadius: 20,               // скругление углов
         },
         tabBarLabelStyle: {
           fontSize: 11,
