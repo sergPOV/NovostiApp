@@ -10,26 +10,22 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import NewsCard from '../components/NewsCard';
 import { loadNews } from '../services/newsService';
-import { globalStyles, colors, spacing, typography } from '../styles/styles';
+import { globalStyles, colors, spacing } from '../styles/styles';
 
 export default function NewsScreen() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [progress, setProgress] = useState(0);
 
   const load = async () => {
     try {
       setError('');
       setLoading(true);
-      setProgress(0);
       
-      const data = await loadNews((current, total) => {
-        setProgress(Math.round((current / total) * 100));
-      });
-      
+      const data = await loadNews(); // убрали onProgress
       setNews(data);
+      
       if (data.length === 0) {
         setError('Новостей не найдено');
       }
@@ -56,6 +52,7 @@ export default function NewsScreen() {
     }
   };
 
+  // --- ЭКРАН ЗАГРУЗКИ (показывается только при первом открытии) ---
   if (loading) {
     return (
       <View style={globalStyles.center}>
@@ -63,15 +60,11 @@ export default function NewsScreen() {
         <Text style={{ marginTop: spacing.sm, color: colors.gray, fontSize: 16 }}>
           Загрузка новостей...
         </Text>
-        {progress > 0 && (
-          <Text style={{ marginTop: spacing.sm, color: colors.primary, fontSize: 18, fontWeight: '600' }}>
-            {progress}%
-          </Text>
-        )}
       </View>
     );
   }
 
+  // --- ОСНОВНОЙ СПИСОК ---
   return (
     <FlatList
       data={news}

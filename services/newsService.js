@@ -1,4 +1,4 @@
-import { cleanText, makeAbsoluteUrl, isRealNews } from '../utils/helpers';
+import { cleanText, makeAbsoluteUrl } from '../utils/helpers';
 
 const BASE = 'https://admprom.ru';
 
@@ -69,13 +69,11 @@ const fetchNewsDetails = async (url) => {
     // --- КАРТИНКА ---
     let poster = null;
     
-    // 1. og:image
     let match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
     if (match) {
       poster = makeAbsoluteUrl(match[1]);
     }
     
-    // 2. twitter:image
     if (!poster) {
       match = html.match(/<meta[^>]+name="twitter:image"[^>]+content="([^"]+)"/i);
       if (match) {
@@ -83,7 +81,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
     
-    // 3. Первая картинка в статье
     if (!poster) {
       match = html.match(/<article[\s\S]*?<img[^>]+src="([^"]+)"/i);
       if (match) {
@@ -91,7 +88,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
     
-    // 4. Любая картинка (кроме логотипов)
     if (!poster) {
       const imgRegex = /<img[^>]+src="([^"]+)"/gi;
       let imgMatch;
@@ -137,7 +133,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
     
-    // --- Если заголовок пустой, берём из первого предложения ---
     if (!title && excerpt) {
       const firstSentence = excerpt.match(/^([^.!?]*[.!?])/);
       if (firstSentence) {
@@ -148,7 +143,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
     
-    // --- Заглушки ---
     if (!title) {
       title = 'Новость';
     }
@@ -176,9 +170,9 @@ const fetchNewsDetails = async (url) => {
 };
 
 // ============================================================
-// ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ
+// ⚡ ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ (ПАРАЛЛЕЛЬНАЯ)
 // ============================================================
-export const loadNews = async (onProgress) => {
+export const loadNews = async () => {
   console.log('📡 Загружаем RSS-ленту новостей...');
   
   try {
@@ -204,25 +198,20 @@ export const loadNews = async (onProgress) => {
       return dateB - dateA;
     });
     
-    const topLinks = sortedLinks.slice(0, 20);
+    const topLinks = sortedLinks.slice(0, 15);
     
-    const newsItems = [];
-    let loaded = 0;
+    console.log(`⏳ Загружаем ${topLinks.length} новостей параллельно...`);
     
-    for (let i = 0; i < topLinks.length; i++) {
-      const link = topLinks[i];
-      const detail = await fetchNewsDetails(link.url);
-      if (detail) {
-        newsItems.push(detail);
-      }
-      loaded++;
-      if (onProgress) {
-        onProgress(loaded, topLinks.length);
-      }
-    }
+    const newsItems = await Promise.all(
+      topLinks.map(async (link) => {
+        return await fetchNewsDetails(link.url);
+      })
+    );
     
-    console.log(`✅ Загружено ${newsItems.length} новостей`);
-    return newsItems;
+    const validNews = newsItems.filter(item => item !== null);
+    
+    console.log(`✅ Загружено ${validNews.length} новостей`);
+    return validNews;
     
   } catch (err) {
     console.error('❌ Ошибка загрузки:', err);
