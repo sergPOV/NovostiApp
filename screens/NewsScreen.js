@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import NewsCard from '../components/NewsCard';
-import { loadNews } from '../services/newsService';
+import SkeletonCard from '../components/SkeletonCard';
+import { loadNewsFast, loadNewsDetails } from '../services/newsService';
 import { globalStyles, colors, spacing } from '../styles/styles';
 
 export default function NewsScreen() {
@@ -17,24 +18,37 @@ export default function NewsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
 
   const load = async () => {
     try {
       setError('');
       setLoading(true);
+      setIsDetailsLoading(false);
 
-      const data = await loadNews();
-      setNews(data);
+      // 1. БЫСТРАЯ ЗАГРУЗКА (только заголовки)
+      const fastData = await loadNewsFast();
+      setNews(fastData);
+      setLoading(false);
+      setIsDetailsLoading(true);
 
-      if (data.length === 0) {
-        setError('Новостей не найдено');
+      // 2. ФОНОВАЯ ДОЗАГРУЗКА (детали для каждой новости)
+      const detailedNews = [];
+      for (let i = 0; i < fastData.length; i++) {
+        const detailed = await loadNewsDetails(fastData[i]);
+        detailedNews.push(detailed);
+        // Обновляем список постепенно
+        setNews([...detailedNews]);
       }
+      setIsDetailsLoading(false);
+
     } catch (err) {
       console.error('Ошибка загрузки:', err);
       setError('Не удалось загрузить новости.\nПроверьте подключение к интернету.');
       setNews([]);
-    } finally {
       setLoading(false);
+      setIsDetailsLoading(false);
+    } finally {
       setRefreshing(false);
     }
   };
@@ -52,6 +66,7 @@ export default function NewsScreen() {
     }
   };
 
+  // Показываем скелетоны во время загрузки
   if (loading) {
     return (
       <View style={globalStyles.center}>
@@ -112,9 +127,13 @@ export default function NewsScreen() {
           </Text>
         </View>
       }
-      renderItem={({ item }) => (
-        <NewsCard item={item} onPress={() => openNews(item.url)} />
-      )}
+      renderItem={({ item }) => {
+        // Если новость ещё загружается — показываем скелетон
+        if (item.isLoading) {
+          return <SkeletonCard />;
+        }
+        return <NewsCard item={item} onPress={() => openNews(item.url)} />;
+      }}
     />
   );
 }

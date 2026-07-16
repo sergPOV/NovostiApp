@@ -1,14 +1,10 @@
-// ============================================================
-// СЕРВИС ДЛЯ ЗАГРУЗКИ НОВОСТЕЙ
-// ============================================================
-
 import { BASE_URL, RSS_URL, MAX_NEWS, PLACEHOLDER_IMAGE, USER_AGENT } from '../constans/index';
 import { cleanText, truncate } from '../utils/text';
 import { makeAbsoluteUrl, extractDateFromUrl, isInternalNewsLink } from '../utils/url';
 import { isRealNews } from '../utils/validators';
 
 // ============================================================
-// 1. ПАРСИНГ RSS — получаем список ссылок
+// 1. ПАРСИНГ RSS — получаем список ссылок с заголовками
 // ============================================================
 const parseRSSLinks = (rssText) => {
   const links = [];
@@ -21,6 +17,23 @@ const parseRSSLinks = (rssText) => {
     const linkMatch = content.match(/<link>([^<]*)<\/link>/);
     const link = linkMatch ? linkMatch[1].trim() : '';
 
+    const titleMatch = content.match(/<title>([^<]*)<\/title>/);
+    let title = titleMatch ? titleMatch[1].trim() : '';
+
+    if (!title) {
+      const descMatch = content.match(/<description>([\s\S]*?)<\/description>/);
+      if (descMatch) {
+        const rawDesc = descMatch[1].replace(/<[^>]*>/g, ' ').trim();
+        const firstSentence = rawDesc.match(/^([^.!?]*[.!?])/);
+        if (firstSentence) {
+          title = firstSentence[1].trim();
+          if (title.length > 80) {
+            title = title.slice(0, 80) + '...';
+          }
+        }
+      }
+    }
+
     const pubDateMatch = content.match(/<pubDate>([^<]*)<\/pubDate>/);
     let date = null;
     if (pubDateMatch) {
@@ -31,6 +44,7 @@ const parseRSSLinks = (rssText) => {
     if (link && isInternalNewsLink(link)) {
       links.push({
         url: link,
+        title: title || 'Новость',
         date: date || extractDateFromUrl(link) || new Date().toISOString(),
       });
     }
@@ -40,7 +54,7 @@ const parseRSSLinks = (rssText) => {
 };
 
 // ============================================================
-// 2. ЗАГРУЗКА СТРАНИЦЫ НОВОСТИ
+// 2. ЗАГРУЗКА СТРАНИЦЫ НОВОСТИ (ПОЛНЫЕ ДЕТАЛИ)
 // ============================================================
 const fetchNewsDetails = async (url) => {
   try {
@@ -57,7 +71,6 @@ const fetchNewsDetails = async (url) => {
 
     const html = await response.text();
 
-    // --- ЗАГОЛОВОК ---
     let title = '';
     const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     if (h1Match) {
@@ -71,16 +84,13 @@ const fetchNewsDetails = async (url) => {
       }
     }
 
-    // --- КАРТИНКА ---
     let poster = null;
 
-    // 1. og:image
     let match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
     if (match) {
       poster = makeAbsoluteUrl(match[1]);
     }
 
-    // 2. twitter:image
     if (!poster) {
       match = html.match(/<meta[^>]+name="twitter:image"[^>]+content="([^"]+)"/i);
       if (match) {
@@ -88,7 +98,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
 
-    // 3. Первая картинка в статье
     if (!poster) {
       match = html.match(/<article[\s\S]*?<img[^>]+src="([^"]+)"/i);
       if (match) {
@@ -96,7 +105,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
 
-    // 4. Любая картинка (кроме логотипов)
     if (!poster) {
       const imgRegex = /<img[^>]+src="([^"]+)"/gi;
       let imgMatch;
@@ -109,13 +117,11 @@ const fetchNewsDetails = async (url) => {
       }
     }
 
-    // --- ОПИСАНИЕ (чистый текст, без заголовка) ---
     let excerpt = '';
 
     const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
     if (articleMatch) {
       let articleText = cleanText(articleMatch[1]);
-      // Удаляем заголовок из начала описания, если он там есть
       if (title && articleText.startsWith(title)) {
         articleText = articleText.slice(title.length).trim();
       }
@@ -133,7 +139,6 @@ const fetchNewsDetails = async (url) => {
       }
     }
 
-    // --- Заглушки ---
     if (!title) {
       title = 'Новость';
     }
@@ -161,15 +166,12 @@ const fetchNewsDetails = async (url) => {
 };
 
 // ============================================================
-// 3. ОСНОВНАЯ ФУНКЦИЯ — ЗАГРУЗКА ВСЕХ НОВОСТЕЙ
+// 3. БЫСТРАЯ ЗАГРУЗКА — только RSS (без HTML)
 // ============================================================
-export const loadNews = async () => {
+export const loadNewsFast = async () => {
   try {
-    // 1. Загружаем RSS
     const response = await fetch(RSS_URL, {
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-      },
+      headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, */*' },
     });
 
     if (!response.ok) {
@@ -177,31 +179,66 @@ export const loadNews = async () => {
     }
 
     const rssText = await response.text();
-
-    // 2. Парсим ссылки
     const links = parseRSSLinks(rssText);
 
-    // 3. Сортируем по дате (сначала свежие)
     const sortedLinks = links.sort((a, b) => {
       const dateA = new Date(a.date || 0);
       const dateB = new Date(b.date || 0);
       return dateB - dateA;
     });
 
-    // 4. Берём только первые MAX_NEWS
     const topLinks = sortedLinks.slice(0, MAX_NEWS);
 
-    // 5. Загружаем все новости параллельно
-    const newsItems = await Promise.all(
-      topLinks.map((link) => fetchNewsDetails(link.url))
-    );
+    return topLinks.map((link) => ({
+      id: link.url,
+      title: link.title || 'Новость',
+      excerpt: 'Загрузка описания...',
+      poster: PLACEHOLDER_IMAGE,
+      url: link.url,
+      isLoading: true,
+    }));
 
-    // 6. Убираем null и фильтруем по стоп-словам
-    const validNews = newsItems
-      .filter((item) => item !== null)
-      .filter((item) => isRealNews(item.title, item.excerpt));
+  } catch (err) {
+    console.error('Ошибка быстрой загрузки:', err);
+    throw err;
+  }
+};
 
-    return validNews;
+// ============================================================
+// 4. ДОЗАГРУЗКА ДЕТАЛЕЙ ДЛЯ ОДНОЙ НОВОСТИ
+// ============================================================
+export const loadNewsDetails = async (newsItem) => {
+  if (!newsItem.isLoading) return newsItem;
+
+  const detail = await fetchNewsDetails(newsItem.url);
+  if (detail) {
+    return {
+      ...detail,
+      isLoading: false,
+    };
+  }
+  return {
+    ...newsItem,
+    isLoading: false,
+    excerpt: 'Описание недоступно',
+  };
+};
+
+// ============================================================
+// 5. ОСНОВНАЯ ФУНКЦИЯ — ПОЛНАЯ ЗАГРУЗКА (для совместимости)
+// ============================================================
+export const loadNews = async () => {
+  try {
+    const fastData = await loadNewsFast();
+    
+    // Дозагружаем детали для всех новостей
+    const detailedNews = [];
+    for (let i = 0; i < fastData.length; i++) {
+      const detailed = await loadNewsDetails(fastData[i]);
+      detailedNews.push(detailed);
+    }
+    
+    return detailedNews;
 
   } catch (err) {
     console.error('Ошибка загрузки новостей:', err);
