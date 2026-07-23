@@ -2,19 +2,51 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-export const colors = {
+// ============================================================
+// ЦВЕТА ДЛЯ СВЕТЛОЙ И ТЁМНОЙ ТЕМЫ
+// ============================================================
+export const lightColors = {
   primary: '#007AFF',
   primaryDark: '#0055CC',
   background: '#F5F5F5',
-  white: '#FFFFFF',
-  black: '#111111',
-  gray: '#666666',
-  lightGray: '#888888',
+  card: '#FFFFFF',
+  text: '#111111',
+  textSecondary: '#666666',
+  textLight: '#999999',
+  textEmpty: '#666666',      // ← ДОБАВЛЕНО
   border: '#E0E0E0',
   error: '#D32F2F',
   success: '#34A853',
+  shadow: '#000',
 };
 
+export const darkColors = {
+  primary: '#4A9EFF',
+  primaryDark: '#1A6FD6',
+  background: '#121212',
+  card: '#1E1E1E',
+  text: '#F5F5F5',
+  textSecondary: '#CCCCCC',
+  textLight: '#888888',
+  textEmpty: '#EEEEEE',      // ← ДОБАВЛЕНО (ярко-белый для пустых состояний)
+  border: '#333333',
+  error: '#EF5350',
+  success: '#66BB6A',
+  shadow: '#000',
+};
+
+// ============================================================
+// ТЕКУЩАЯ ТЕМА
+// ============================================================
+export let colors = { ...lightColors };
+
+export const setTheme = (theme) => {
+  colors = theme === 'dark' ? { ...darkColors } : { ...lightColors };
+};
+
+// ============================================================
+// ОТСТУПЫ
+// ============================================================
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -22,40 +54,47 @@ export const spacing = {
   lg: 16,
   xl: 20,
   xxl: 24,
+  xxxl: 32,
 };
 
+// ============================================================
+// ШРИФТЫ
+// ============================================================
 export const typography = {
   title: {
     fontSize: 26,
     fontWeight: '700',
-    color: colors.black,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.gray,
+    color: colors.textSecondary,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.black,
+    color: colors.text,
     lineHeight: 22,
   },
   cardExcerpt: {
     fontSize: 14,
-    color: colors.gray,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   body: {
     fontSize: 14,
-    color: colors.gray,
+    color: colors.textSecondary,
   },
   small: {
     fontSize: 12,
-    color: colors.lightGray,
+    color: colors.textLight,
   },
 };
 
+// ============================================================
+// ТЕНИ
+// ============================================================
 export const shadows = {
   card: {
     shadowColor: '#000',
@@ -64,15 +103,18 @@ export const shadows = {
     shadowRadius: 4,
     elevation: 2,
   },
-  cardHover: {
+  cardDark: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
 };
 
+// ============================================================
+// ГЛОБАЛЬНЫЕ СТИЛИ
+// ============================================================
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -86,11 +128,15 @@ export const globalStyles = StyleSheet.create({
     padding: spacing.xl,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: 14,
     overflow: 'hidden',
     marginBottom: spacing.lg,
-    ...shadows.card,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   list: {
     padding: spacing.lg,
@@ -103,3 +149,35 @@ export const globalStyles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+// ============================================================
+// ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ СТИЛЕЙ ПРИ СМЕНЕ ТЕМЫ
+// ============================================================
+export const getThemedStyles = (theme) => {
+  const isDark = theme === 'dark';
+  const currentColors = isDark ? darkColors : lightColors;
+  
+  return {
+    container: {
+      flex: 1,
+      backgroundColor: currentColors.background,
+    },
+    card: {
+      backgroundColor: currentColors.card,
+      borderRadius: 14,
+      overflow: 'hidden',
+      marginBottom: spacing.lg,
+      shadowColor: currentColors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.08,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    text: {
+      color: currentColors.text,
+    },
+    textSecondary: {
+      color: currentColors.textSecondary,
+    },
+  };
+};

@@ -4,15 +4,26 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { colors } from './styles/styles';
+
 import NewsScreen from './screens/NewsScreen';
 import ContactsScreen from './screens/ContactsScreen';
 import AboutScreen from './screens/AboutScreen';
 import WebViewScreen from './screens/WebViewScreen';
+import ThemeToggle from './components/ThemeToggle';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+// ============================================================
+// НИЖНЯЯ ПАНЕЛЬ
+// ============================================================
 function MainTabs() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const currentColors = colors;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -27,41 +38,37 @@ function MainTabs() {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#999',
-        
-        // ЗАГОЛОВОК
+        tabBarActiveTintColor: currentColors.primary,
+        tabBarInactiveTintColor: currentColors.textLight,
         headerStyle: {
-          backgroundColor: '#007AFF',
+          backgroundColor: currentColors.primary,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        
-        // ============================================================
-        // 🎨 СТИЛЬ ПАНЕЛИ — ПЛАВАЮЩАЯ (как раньше)
-        // ============================================================
+        headerRight: () => <ThemeToggle />,
         tabBarStyle: {
-          position: 'absolute',           // плавающая панель
-          backgroundColor: '#FFFFFF',
+          position: 'absolute',
+          backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           borderTopWidth: 0,
           elevation: 12,
-          shadowColor: '#000',
+          shadowColor: currentColors.shadow,
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
+          shadowOpacity: isDark ? 0.3 : 0.08,
           shadowRadius: 12,
           height: 70,
           paddingBottom: 12,
           paddingTop: 6,
-          marginHorizontal: 16,           // отступы по бокам
-          marginBottom: 12,               // поднята над низом
-          borderRadius: 20,               // скругление углов
+          marginHorizontal: 16,
+          marginBottom: 12,
+          borderRadius: 20,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
           marginTop: 2,
+          color: isDark ? '#CCCCCC' : '#666666',
         },
       })}
     >
@@ -72,9 +79,23 @@ function MainTabs() {
   );
 }
 
-export default function App() {
+// ============================================================
+// ГЛАВНОЕ ПРИЛОЖЕНИЕ
+// ============================================================
+function AppContent() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={{
+      colors: {
+        background: isDark ? '#121212' : '#F5F5F5',
+        card: isDark ? '#1E1E1E' : '#FFFFFF',
+        text: isDark ? '#F5F5F5' : '#111111',
+        border: isDark ? '#333333' : '#E0E0E0',
+        primary: '#007AFF',
+      },
+    }}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -90,5 +111,16 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+// ============================================================
+// ОБЁРТКА С ТЕМОЙ
+// ============================================================
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

@@ -231,7 +231,6 @@ export const loadNews = async () => {
   try {
     const fastData = await loadNewsFast();
     
-    // Дозагружаем детали для всех новостей
     const detailedNews = [];
     for (let i = 0; i < fastData.length; i++) {
       const detailed = await loadNewsDetails(fastData[i]);

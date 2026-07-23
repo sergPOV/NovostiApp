@@ -1,8 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography, shadows } from '../styles/styles';
+import { useTheme } from '../context/ThemeContext';
+import { colors, spacing, shadows } from '../styles/styles';
 
 export default function AboutScreen() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const styles = getStyles(isDark);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>📰 Новостная лента</Text>
@@ -31,31 +36,35 @@ export default function AboutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: isDark ? '#121212' : '#F5F5F5',
     padding: spacing.lg,
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: colors.black,
+    color: isDark ? '#F5F5F5' : '#111111',
     textAlign: 'center',
     marginTop: spacing.xl,
   },
   subtitle: {
     fontSize: 18,
-    color: colors.gray,
+    color: isDark ? '#AAAAAA' : '#666666',
     textAlign: 'center',
     marginBottom: spacing.xxl,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
     borderRadius: 12,
     padding: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.card,
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.3 : 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   version: {
     fontSize: 16,
@@ -66,18 +75,18 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 15,
-    color: '#444',
+    color: isDark ? '#CCCCCC' : '#444444',
     textAlign: 'center',
     lineHeight: 22,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#555',
+    color: isDark ? '#AAAAAA' : '#555555',
     marginBottom: spacing.xs,
   },
   source: {
     fontSize: 14,
-    color: '#333',
+    color: isDark ? '#CCCCCC' : '#333333',
   },
 });

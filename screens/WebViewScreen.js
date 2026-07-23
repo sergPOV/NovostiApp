@@ -10,14 +10,20 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 import { colors, spacing } from '../styles/styles';
 
 export default function WebViewScreen({ route, navigation }) {
   const { url, title } = route.params || {};
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const webViewRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 0;
+  const styles = getStyles(isDark, statusBarHeight);
 
   if (!url) {
     return (
@@ -27,15 +33,11 @@ export default function WebViewScreen({ route, navigation }) {
     );
   }
 
-  // Получаем высоту статус-бара
-  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 0;
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
-      {/* Верхняя панель с минимальным отступом */}
-      <View style={[styles.header, { paddingTop: statusBarHeight + 2 }]}>
+      <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.headerButton}
@@ -104,16 +106,17 @@ export default function WebViewScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (isDark, statusBarHeight) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: isDark ? '#121212' : '#fff',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
+    paddingTop: statusBarHeight + 4,
     paddingBottom: 8,
     minHeight: 48,
     zIndex: 10,
@@ -138,6 +141,7 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+    backgroundColor: isDark ? '#121212' : '#fff',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -147,17 +151,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: isDark ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,0.85)',
   },
   loadingText: {
     marginTop: spacing.sm,
-    color: colors.gray,
+    color: isDark ? '#AAAAAA' : '#666666',
     fontSize: 14,
   },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: isDark ? '#121212' : '#F5F5F5',
   },
   errorText: {
     fontSize: 16,

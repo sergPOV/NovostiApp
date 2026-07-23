@@ -7,9 +7,14 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { colors, spacing, typography, shadows } from '../styles/styles';
+import { useTheme } from '../context/ThemeContext';
+import { colors, spacing } from '../styles/styles';
 
 export default function ContactsScreen() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const styles = getStyles(isDark);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.card}>
@@ -50,35 +55,39 @@ export default function ContactsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: isDark ? '#121212' : '#F5F5F5',
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
     borderRadius: 12,
     margin: spacing.lg,
     padding: spacing.xl,
-    ...shadows.card,
+    shadowColor: isDark ? '#000' : '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.3 : 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.black,
+    color: isDark ? '#F5F5F5' : '#111111',
     marginBottom: spacing.lg,
     textAlign: 'center',
   },
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: isDark ? '#AAAAAA' : '#333333',
     marginTop: spacing.lg,
     marginBottom: spacing.xs,
   },
   text: {
     fontSize: 14,
-    color: '#555',
+    color: isDark ? '#CCCCCC' : '#555555',
     lineHeight: 20,
   },
   link: {
@@ -93,7 +102,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: isDark ? '#333333' : '#E0E0E0',
     marginVertical: spacing.lg,
   },
 });
