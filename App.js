@@ -24,6 +24,9 @@ function MainTabs() {
   const isDark = theme === 'dark';
   const currentColors = colors;
 
+  // ⬇️ Выбираем цвет в зависимости от темы
+  const activeColor = isDark ? '#7B61FF' : '#007AFF'; // фиолетовый в тёмной, синий в светлой
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -38,16 +41,21 @@ function MainTabs() {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: currentColors.primary,
-        tabBarInactiveTintColor: currentColors.textLight,
+        // ⬇️ АКТИВНАЯ ВКЛАДКА — зависит от темы
+        tabBarActiveTintColor: activeColor,
+        // ⬇️ НЕАКТИВНАЯ ВКЛАДКА — СЕРЫЙ
+        tabBarInactiveTintColor: isDark ? '#666666' : '#999999',
+        
+        // ⬇️ ВЕРХНЯЯ ПАНЕЛЬ — зависит от темы
         headerStyle: {
-          backgroundColor: currentColors.primary,
+          backgroundColor: isDark ? '#1A1A2E' : activeColor,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: 'bold',
         },
         headerRight: () => <ThemeToggle />,
+        
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
@@ -86,6 +94,9 @@ function AppContent() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  // ⬇️ Основной цвет приложения — зависит от темы
+  const primaryColor = isDark ? '#7B61FF' : '#007AFF';
+
   return (
     <NavigationContainer theme={{
       colors: {
@@ -93,7 +104,7 @@ function AppContent() {
         card: isDark ? '#1E1E1E' : '#FFFFFF',
         text: isDark ? '#F5F5F5' : '#111111',
         border: isDark ? '#333333' : '#E0E0E0',
-        primary: '#007AFF',
+        primary: primaryColor,
       },
     }}>
       <Stack.Navigator

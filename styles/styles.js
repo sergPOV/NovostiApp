@@ -6,14 +6,14 @@ const { width } = Dimensions.get('window');
 // ЦВЕТА ДЛЯ СВЕТЛОЙ И ТЁМНОЙ ТЕМЫ
 // ============================================================
 export const lightColors = {
-  primary: '#007AFF',
+  primary: '#007AFF',        // ← СИНИЙ для светлой темы
   primaryDark: '#0055CC',
   background: '#F5F5F5',
   card: '#FFFFFF',
   text: '#111111',
   textSecondary: '#666666',
   textLight: '#999999',
-  textEmpty: '#666666',      // ← ДОБАВЛЕНО
+  textEmpty: '#666666',
   border: '#E0E0E0',
   error: '#D32F2F',
   success: '#34A853',
@@ -21,14 +21,14 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  primary: '#4A9EFF',
-  primaryDark: '#1A6FD6',
+  primary: '#7B61FF',        // ← ФИОЛЕТОВЫЙ для тёмной темы
+  primaryDark: '#5A3FD6',
   background: '#121212',
   card: '#1E1E1E',
   text: '#F5F5F5',
   textSecondary: '#CCCCCC',
   textLight: '#888888',
-  textEmpty: '#EEEEEE',      // ← ДОБАВЛЕНО (ярко-белый для пустых состояний)
+  textEmpty: '#EEEEEE',
   border: '#333333',
   error: '#EF5350',
   success: '#66BB6A',

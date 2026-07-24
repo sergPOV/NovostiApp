@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import NewsCard from '../components/NewsCard';
 import SkeletonCard from '../components/SkeletonCard';
@@ -25,8 +25,6 @@ export default function NewsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  
-  // Сохраняем позицию скролла
   const scrollOffset = useRef(0);
 
   const load = async (isRefresh = false) => {
@@ -78,12 +76,12 @@ export default function NewsScreen() {
     load(true);
   };
 
-  const openNews = (url, title) => {
+  const openNews = useCallback((url, title) => {
     navigation.navigate('WebView', {
       url: url,
       title: title || 'Новость',
     });
-  };
+  }, [navigation]);
 
   const filteredNews = useMemo(() => {
     if (selectedCategory === 'all') return news;
@@ -94,8 +92,28 @@ export default function NewsScreen() {
     });
   }, [news, selectedCategory]);
 
-  // ✅ НЕ прокручиваем наверх при возврате из WebView
-  // Только при первом открытии или если явно вызвано
+  // ⬇️ ОПТИМИЗАЦИЯ: мемоизация renderItem
+  const renderItem = useCallback(({ item }) => {
+    if (item.isLoading) {
+      return <SkeletonCard />;
+    }
+    return (
+      <NewsCard
+        item={item}
+        onPress={() => openNews(item.url, item.title)}
+      />
+    );
+  }, [openNews]);
+
+  // ⬇️ ОПТИМИЗАЦИЯ: keyExtractor
+  const keyExtractor = useCallback((item) => item.id, []);
+
+  // ⬇️ ОПТИМИЗАЦИЯ: getItemLayout (примерная высота карточки)
+  const getItemLayout = useCallback((data, index) => ({
+    length: 280, // примерная высота карточки с картинкой
+    offset: 280 * index,
+    index,
+  }), []);
 
   if (loading) {
     return (
@@ -112,7 +130,8 @@ export default function NewsScreen() {
     <FlatList
       ref={flatListRef}
       data={filteredNews}
-      keyExtractor={(item) => item.id}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
       contentContainerStyle={globalStyles.list}
       refreshControl={
         <RefreshControl
@@ -127,6 +146,13 @@ export default function NewsScreen() {
         scrollOffset.current = event.nativeEvent.contentOffset.y;
       }}
       scrollEventThrottle={16}
+      // ⬇️ ОПТИМИЗАЦИЯ: настройки виртуализации
+      maxToRenderPerBatch={5}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={5}
+      windowSize={5}
+      removeClippedSubviews={true}
+      getItemLayout={getItemLayout}
       ListHeaderComponent={
         <>
           {error && (
@@ -157,17 +183,6 @@ export default function NewsScreen() {
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
-
-          {filteredNews.length > 0 && (
-            <Text style={{
-              fontSize: 13,
-              color: isDark ? '#888888' : '#999999',
-              marginBottom: spacing.md,
-              paddingHorizontal: 4,
-            }}>
-              Найдено: {filteredNews.length} новостей
-            </Text>
-          )}
         </>
       }
       ListEmptyComponent={
@@ -195,17 +210,6 @@ export default function NewsScreen() {
           </Text>
         </View>
       }
-      renderItem={({ item }) => {
-        if (item.isLoading) {
-          return <SkeletonCard />;
-        }
-        return (
-          <NewsCard
-            item={item}
-            onPress={() => openNews(item.url, item.title)}
-          />
-        );
-      }}
     />
   );
 }

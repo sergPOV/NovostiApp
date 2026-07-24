@@ -23,7 +23,6 @@ export default function WebViewScreen({ route, navigation }) {
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
-  // Высота статус-бара для Android
   const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   if (!url) {
@@ -35,7 +34,7 @@ export default function WebViewScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       {/* Верхняя панель */}
@@ -91,7 +90,7 @@ export default function WebViewScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* WebView */}
+      {/* WebView на всю ширину */}
       <WebView
         ref={webViewRef}
         source={{ uri: url }}
@@ -104,6 +103,8 @@ export default function WebViewScreen({ route, navigation }) {
         startInLoadingState={false}
         style={styles.webview}
         containerStyle={{ flex: 1 }}
+        // ✅ Отключаем отступы SafeArea
+        contentInset={{ top: 0, bottom: 0, left: 0, right: 0 }}
       />
 
       {/* Индикатор загрузки */}
@@ -115,7 +116,7 @@ export default function WebViewScreen({ route, navigation }) {
           </Text>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -151,6 +152,7 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+    width: '100%', // ✅ Принудительно на всю ширину
   },
   loadingOverlay: {
     position: 'absolute',
