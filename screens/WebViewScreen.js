@@ -8,6 +8,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -22,22 +23,29 @@ export default function WebViewScreen({ route, navigation }) {
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
-  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 0;
-  const styles = getStyles(isDark, statusBarHeight);
+  // Высота статус-бара для Android
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   if (!url) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Ссылка не найдена</Text>
+      <View style={[styles.center, { backgroundColor: isDark ? '#121212' : '#F5F5F5' }]}>
+        <Text style={{ color: isDark ? '#CCCCCC' : '#666666' }}>Ссылка не найдена</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
-      <View style={styles.header}>
+      {/* Верхняя панель */}
+      <View style={[
+        styles.header,
+        { 
+          paddingTop: statusBarHeight + 4,
+          backgroundColor: colors.primary,
+        }
+      ]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.headerButton}
@@ -83,6 +91,7 @@ export default function WebViewScreen({ route, navigation }) {
         </View>
       </View>
 
+      {/* WebView */}
       <WebView
         ref={webViewRef}
         source={{ uri: url }}
@@ -94,29 +103,30 @@ export default function WebViewScreen({ route, navigation }) {
         }}
         startInLoadingState={false}
         style={styles.webview}
+        containerStyle={{ flex: 1 }}
       />
 
+      {/* Индикатор загрузки */}
       {loading && (
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: isDark ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,0.85)' }]}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Загрузка...</Text>
+          <Text style={{ marginTop: spacing.sm, color: isDark ? '#CCCCCC' : '#666666' }}>
+            Загрузка...
+          </Text>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
-const getStyles = (isDark, statusBarHeight) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#121212' : '#fff',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
-    paddingTop: statusBarHeight + 4,
     paddingBottom: 8,
     minHeight: 48,
     zIndex: 10,
@@ -141,7 +151,6 @@ const getStyles = (isDark, statusBarHeight) => StyleSheet.create({
   },
   webview: {
     flex: 1,
-    backgroundColor: isDark ? '#121212' : '#fff',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -151,21 +160,10 @@ const getStyles = (isDark, statusBarHeight) => StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: isDark ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,0.85)',
-  },
-  loadingText: {
-    marginTop: spacing.sm,
-    color: isDark ? '#AAAAAA' : '#666666',
-    fontSize: 14,
   },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: isDark ? '#121212' : '#F5F5F5',
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.error,
   },
 });

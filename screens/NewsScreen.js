@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import NewsCard from '../components/NewsCard';
 import SkeletonCard from '../components/SkeletonCard';
@@ -19,11 +19,15 @@ export default function NewsScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const flatListRef = useRef(null);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  
+  // Сохраняем позицию скролла
+  const scrollOffset = useRef(0);
 
   const load = async (isRefresh = false) => {
     try {
@@ -90,6 +94,9 @@ export default function NewsScreen() {
     });
   }, [news, selectedCategory]);
 
+  // ✅ НЕ прокручиваем наверх при возврате из WebView
+  // Только при первом открытии или если явно вызвано
+
   if (loading) {
     return (
       <View style={[globalStyles.center, { backgroundColor: isDark ? '#121212' : '#F5F5F5' }]}>
@@ -103,6 +110,7 @@ export default function NewsScreen() {
 
   return (
     <FlatList
+      ref={flatListRef}
       data={filteredNews}
       keyExtractor={(item) => item.id}
       contentContainerStyle={globalStyles.list}
@@ -115,6 +123,10 @@ export default function NewsScreen() {
           progressBackgroundColor={isDark ? '#1E1E1E' : '#FFFFFF'}
         />
       }
+      onScroll={(event) => {
+        scrollOffset.current = event.nativeEvent.contentOffset.y;
+      }}
+      scrollEventThrottle={16}
       ListHeaderComponent={
         <>
           {error && (
