@@ -92,7 +92,6 @@ export default function NewsScreen() {
     });
   }, [news, selectedCategory]);
 
-  // ⬇️ ОПТИМИЗАЦИЯ: мемоизация renderItem
   const renderItem = useCallback(({ item }) => {
     if (item.isLoading) {
       return <SkeletonCard />;
@@ -105,12 +104,10 @@ export default function NewsScreen() {
     );
   }, [openNews]);
 
-  // ⬇️ ОПТИМИЗАЦИЯ: keyExtractor
   const keyExtractor = useCallback((item) => item.id, []);
 
-  // ⬇️ ОПТИМИЗАЦИЯ: getItemLayout (примерная высота карточки)
   const getItemLayout = useCallback((data, index) => ({
-    length: 280, // примерная высота карточки с картинкой
+    length: 280,
     offset: 280 * index,
     index,
   }), []);
@@ -132,7 +129,10 @@ export default function NewsScreen() {
       data={filteredNews}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      contentContainerStyle={globalStyles.list}
+      contentContainerStyle={{
+        paddingBottom: spacing.xxl,
+        paddingHorizontal: 0,
+      }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -146,9 +146,7 @@ export default function NewsScreen() {
         scrollOffset.current = event.nativeEvent.contentOffset.y;
       }}
       scrollEventThrottle={16}
-      // ⬇️ ОПТИМИЗАЦИЯ: настройки виртуализации
       maxToRenderPerBatch={5}
-      updateCellsBatchingPeriod={50}
       initialNumToRender={5}
       windowSize={5}
       removeClippedSubviews={true}
@@ -179,10 +177,16 @@ export default function NewsScreen() {
             </View>
           )}
 
+          {/* ✅ ОТСТУП СВЕРХУ НАД КАТЕГОРИЯМИ */}
+          <View style={{ height: spacing.md }} />
+
           <CategoryFilter
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
+
+          {/* Отступ между категориями и карточками */}
+          <View style={{ height: spacing.md }} />
         </>
       }
       ListEmptyComponent={

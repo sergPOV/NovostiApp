@@ -139,7 +139,7 @@ export const globalStyles = StyleSheet.create({
     elevation: 2,
   },
   list: {
-    padding: spacing.lg,
+    
     paddingBottom: spacing.xxl,
     flexGrow: 1,
   },

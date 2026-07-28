@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'react-native';
 
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { colors } from './styles/styles';
@@ -23,9 +24,9 @@ function MainTabs() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const currentColors = colors;
-
-  // ⬇️ Выбираем цвет в зависимости от темы
-  const activeColor = isDark ? '#7B61FF' : '#007AFF'; // фиолетовый в тёмной, синий в светлой
+  const activeColor = isDark ? '#7B61FF' : '#007AFF';
+  const headerColor = isDark ? '#1A1A2E' : activeColor;
+  const statusBarColor = headerColor;
 
   return (
     <Tab.Navigator
@@ -41,15 +42,18 @@ function MainTabs() {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        // ⬇️ АКТИВНАЯ ВКЛАДКА — зависит от темы
         tabBarActiveTintColor: activeColor,
-        // ⬇️ НЕАКТИВНАЯ ВКЛАДКА — СЕРЫЙ
         tabBarInactiveTintColor: isDark ? '#666666' : '#999999',
         
-        // ⬇️ ВЕРХНЯЯ ПАНЕЛЬ — зависит от темы
+        // ⬇️ ВЕРХНЯЯ ПАНЕЛЬ С ЗАКРУГЛЕНИЕМ
         headerStyle: {
-          backgroundColor: isDark ? '#1A1A2E' : activeColor,
+          backgroundColor: headerColor,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+          elevation: 0,
+          shadowOpacity: 0,
         },
+        
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: 'bold',
@@ -93,35 +97,38 @@ function MainTabs() {
 function AppContent() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-
-  // ⬇️ Основной цвет приложения — зависит от темы
-  const primaryColor = isDark ? '#7B61FF' : '#007AFF';
+  const statusBarColor = isDark ? '#1A1A2E' : '#007AFF';
 
   return (
-    <NavigationContainer theme={{
-      colors: {
-        background: isDark ? '#121212' : '#F5F5F5',
-        card: isDark ? '#1E1E1E' : '#FFFFFF',
-        text: isDark ? '#F5F5F5' : '#111111',
-        border: isDark ? '#333333' : '#E0E0E0',
-        primary: primaryColor,
-      },
-    }}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="Main" component={MainTabs} />
-        <Stack.Screen
-          name="WebView"
-          component={WebViewScreen}
-          options={{
+    <>
+      <StatusBar
+        backgroundColor={statusBarColor}
+        barStyle="light-content"
+        translucent={false}
+      />
+      
+      <NavigationContainer theme={{
+        colors: {
+          background: isDark ? '#121212' : '#F5F5F5',
+          card: isDark ? '#1E1E1E' : '#FFFFFF',
+          text: isDark ? '#F5F5F5' : '#111111',
+          border: isDark ? '#333333' : '#E0E0E0',
+          primary: isDark ? '#7B61FF' : '#007AFF',
+        },
+      }}>
+        <Stack.Navigator
+          screenOptions={{
             headerShown: false,
           }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+        >
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen
+            name="WebView"
+            component={WebViewScreen}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }
 
