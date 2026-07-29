@@ -14,9 +14,6 @@ import { spacing } from '../styles/styles';
 const { width } = Dimensions.get('window');
 const cardWidth = width - 32;
 
-// ============================================================
-// ФОРМАТИРОВАНИЕ ДАТЫ
-// ============================================================
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -37,9 +34,6 @@ const formatDate = (dateString) => {
   });
 };
 
-// ============================================================
-// КАРТОЧКА НОВОСТИ
-// ============================================================
 export default function NewsCard({ item, onPress }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -56,7 +50,6 @@ export default function NewsCard({ item, onPress }) {
     >
       <View style={styles.imageContainer}>
         <Image source={{ uri: item.poster }} style={styles.image} />
-        
         <View style={[styles.categoryBadge, { backgroundColor: category.color }]}>
           <Text style={styles.categoryText}>
             {category.icon} {category.label}
@@ -68,20 +61,15 @@ export default function NewsCard({ item, onPress }) {
         <Text style={styles.title} numberOfLines={2}>
           {item.title}
         </Text>
-
         <Text style={styles.excerpt} numberOfLines={2}>
           {item.excerpt || 'Нажмите для чтения'}
         </Text>
-
         <Text style={styles.dateText}>{dateText}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
-// ============================================================
-// СТИЛИ
-// ============================================================
 const getStyles = (isDark) => StyleSheet.create({
   card: {
     backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
@@ -129,7 +117,7 @@ const getStyles = (isDark) => StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '600', // ← БЫЛО '700', СТАЛО '600' (менее жирный)
     color: isDark ? '#F5F5F5' : '#111111',
     lineHeight: 24,
     marginBottom: 6,

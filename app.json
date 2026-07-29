@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Новостник",
-    "slug": "Новостник",
+    "slug": "NovostiApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,15 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sergeycl.novostiapp",
-      "navigationBar": {
-        "backgroundColor": "transparent",
-        "barStyle": "light-content"
-      },
-      "statusBar": {
-        "backgroundColor": "#007AFF",
-        "barStyle": "light-content"
-      }
+      "package": "com.sergeycl.novostiapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"

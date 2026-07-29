@@ -5,9 +5,12 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import NewsCard from '../components/NewsCard';
 import SkeletonCard from '../components/SkeletonCard';
 import CategoryFilter from '../components/CategoryFilter';
@@ -26,6 +29,10 @@ export default function NewsScreen() {
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const scrollOffset = useRef(0);
+  
+  // ⬇️ АНИМАЦИЯ ДЛЯ КНОПКИ "НАВЕРХ"
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showButton, setShowButton] = useState(false);
 
   const load = async (isRefresh = false) => {
     try {
@@ -92,6 +99,35 @@ export default function NewsScreen() {
     });
   }, [news, selectedCategory]);
 
+  // ⬇️ ПРОКРУТКА НАВЕРХ
+  const scrollToTop = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+  };
+
+  // ⬇️ ОБРАБОТЧИК СКРОЛЛА (показываем/скрываем кнопку)
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    scrollOffset.current = offsetY;
+
+    // Показываем кнопку после 300px скролла
+    if (offsetY > 300 && !showButton) {
+      setShowButton(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (offsetY <= 300 && showButton) {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setShowButton(false));
+    }
+  };
+
   const renderItem = useCallback(({ item }) => {
     if (item.isLoading) {
       return <SkeletonCard />;
@@ -106,12 +142,6 @@ export default function NewsScreen() {
 
   const keyExtractor = useCallback((item) => item.id, []);
 
-  const getItemLayout = useCallback((data, index) => ({
-    length: 280,
-    offset: 280 * index,
-    index,
-  }), []);
-
   if (loading) {
     return (
       <View style={[globalStyles.center, { backgroundColor: isDark ? '#121212' : '#F5F5F5' }]}>
@@ -124,96 +154,133 @@ export default function NewsScreen() {
   }
 
   return (
-    <FlatList
-      ref={flatListRef}
-      data={filteredNews}
-      keyExtractor={keyExtractor}
-      renderItem={renderItem}
-      contentContainerStyle={{
-        paddingBottom: spacing.xxl,
-        paddingHorizontal: 0,
-      }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-          progressBackgroundColor={isDark ? '#1E1E1E' : '#FFFFFF'}
-        />
-      }
-      onScroll={(event) => {
-        scrollOffset.current = event.nativeEvent.contentOffset.y;
-      }}
-      scrollEventThrottle={16}
-      maxToRenderPerBatch={5}
-      initialNumToRender={5}
-      windowSize={5}
-      removeClippedSubviews={true}
-      getItemLayout={getItemLayout}
-      ListHeaderComponent={
-        <>
-          {error && (
-            <View style={{
-              alignItems: 'center',
-              padding: spacing.xl,
-              marginBottom: spacing.lg,
-              backgroundColor: '#FFF3E0',
-              borderRadius: 12,
-            }}>
-              <Text style={{ fontSize: 40, marginBottom: spacing.sm }}>⚠️</Text>
-              <Text style={{ color: colors.error, fontSize: 16, textAlign: 'center' }}>{error}</Text>
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 15,
-                  marginTop: spacing.md,
-                  fontWeight: '500',
-                }}
-                onPress={() => load(false)}
-              >
-                Нажмите, чтобы повторить
-              </Text>
-            </View>
-          )}
-
-          {/* ✅ ОТСТУП СВЕРХУ НАД КАТЕГОРИЯМИ */}
-          <View style={{ height: spacing.md }} />
-
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
+    <View style={{ flex: 1, backgroundColor: isDark ? '#121212' : '#F5F5F5' }}>
+      <FlatList
+        ref={flatListRef}
+        data={filteredNews}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        contentContainerStyle={{
+          paddingBottom: spacing.xxl,
+          paddingHorizontal: 0,
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={isDark ? '#1E1E1E' : '#FFFFFF'}
           />
+        }
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        maxToRenderPerBatch={5}
+        initialNumToRender={5}
+        windowSize={5}
+        removeClippedSubviews={true}
+        ListHeaderComponent={
+          <>
+            {error && (
+              <View style={{
+                alignItems: 'center',
+                padding: spacing.xl,
+                marginBottom: spacing.lg,
+                backgroundColor: '#FFF3E0',
+                borderRadius: 12,
+              }}>
+                <Text style={{ fontSize: 40, marginBottom: spacing.sm }}>⚠️</Text>
+                <Text style={{ color: colors.error, fontSize: 16, textAlign: 'center' }}>{error}</Text>
+                <Text
+                  style={{
+                    color: colors.primary,
+                    fontSize: 15,
+                    marginTop: spacing.md,
+                    fontWeight: '500',
+                  }}
+                  onPress={() => load(false)}
+                >
+                  Нажмите, чтобы повторить
+                </Text>
+              </View>
+            )}
 
-          {/* Отступ между категориями и карточками */}
-          <View style={{ height: spacing.md }} />
-        </>
-      }
-      ListEmptyComponent={
-        <View style={{ alignItems: 'center', padding: 40 }}>
-          <Text style={{ fontSize: 48, marginBottom: spacing.md }}>📭</Text>
-          <Text style={{ 
-            fontSize: 16, 
-            color: isDark ? '#EEEEEE' : '#666666',
-            textAlign: 'center',
-          }}>
-            {selectedCategory === 'all' 
-              ? 'Новостей не найдено' 
-              : 'В этой категории новостей нет'}
-          </Text>
-          <Text
+            <View style={{ height: spacing.md }} />
+
+            <CategoryFilter
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+
+            <View style={{ height: spacing.md }} />
+          </>
+        }
+        ListEmptyComponent={
+          <View style={{ alignItems: 'center', padding: 40 }}>
+            <Text style={{ fontSize: 48, marginBottom: spacing.md }}>📭</Text>
+            <Text style={{ 
+              fontSize: 16, 
+              color: isDark ? '#EEEEEE' : '#666666',
+              textAlign: 'center',
+            }}>
+              {selectedCategory === 'all' 
+                ? 'Новостей не найдено' 
+                : 'В этой категории новостей нет'}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: colors.primary,
+                marginTop: spacing.md,
+                fontWeight: '500',
+              }}
+              onPress={() => load(false)}
+            >
+              Обновить
+            </Text>
+          </View>
+        }
+      />
+
+      {/* ⬇️ ПЛАВАЮЩАЯ КНОПКА "НАВЕРХ" */}
+      {showButton && (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            bottom: 90,
+            right: 20,
+            opacity: fadeAnim,
+            transform: [
+              {
+                scale: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+            ],
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={scrollToTop}
             style={{
-              fontSize: 14,
-              color: colors.primary,
-              marginTop: spacing.md,
-              fontWeight: '500',
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: colors.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              elevation: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
             }}
-            onPress={() => load(false)}
           >
-            Обновить
-          </Text>
-        </View>
-      }
-    />
+            <Ionicons name="arrow-up" size={28} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
   );
 }

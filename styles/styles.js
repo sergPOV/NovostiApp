@@ -110,6 +110,13 @@ export const shadows = {
     shadowRadius: 4,
     elevation: 2,
   },
+  floatingButton: {
+    
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
 };
 
 // ============================================================
