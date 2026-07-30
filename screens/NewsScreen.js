@@ -30,7 +30,6 @@ export default function NewsScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const scrollOffset = useRef(0);
   
-  // ⬇️ АНИМАЦИЯ ДЛЯ КНОПКИ "НАВЕРХ"
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [showButton, setShowButton] = useState(false);
 
@@ -99,19 +98,16 @@ export default function NewsScreen() {
     });
   }, [news, selectedCategory]);
 
-  // ⬇️ ПРОКРУТКА НАВЕРХ
   const scrollToTop = () => {
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
-  // ⬇️ ОБРАБОТЧИК СКРОЛЛА (показываем/скрываем кнопку)
   const handleScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     scrollOffset.current = offsetY;
 
-    // Показываем кнопку после 300px скролла
     if (offsetY > 300 && !showButton) {
       setShowButton(true);
       Animated.timing(fadeAnim, {
@@ -242,7 +238,7 @@ export default function NewsScreen() {
         }
       />
 
-      {/* ⬇️ ПЛАВАЮЩАЯ КНОПКА "НАВЕРХ" */}
+      {/* ⬇️ КНОПКА "НАВЕРХ" — БЕЗ ТЕНИ */}
       {showButton && (
         <Animated.View
           style={{
@@ -264,20 +260,21 @@ export default function NewsScreen() {
             activeOpacity={0.8}
             onPress={scrollToTop}
             style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: colors.primary,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: isDark ? '#2A2A2A' : '#E8E8E8',
               alignItems: 'center',
               justifyContent: 'center',
-              elevation: 6,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.3,
-              shadowRadius: 6,
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
             }}
           >
-            <Ionicons name="arrow-up" size={28} color="#fff" />
+            <Ionicons 
+              name="arrow-up" 
+              size={20}
+              color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)'}
+            />
           </TouchableOpacity>
         </Animated.View>
       )}
